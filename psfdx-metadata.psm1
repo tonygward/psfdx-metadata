@@ -373,7 +373,7 @@ function Describe-SalesforceFields {
         [Parameter(Mandatory = $true)][string] $Username,
         [Parameter(Mandatory = $false)][switch] $UseToolingApi        
     )         
-    $result = Describe-SalesforceObject -ObjectName $ObjectName -Username $Username -UseToolingApi:$UseToolingApi 
+    $result = Describe-SalesforceObject -Name $ObjectName -Username $Username -UseToolingApi:$UseToolingApi 
     $result = $result.fields
     $result = $result | Select-Object name, label, type, byteLength
     return $result
