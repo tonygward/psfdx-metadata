@@ -1,13 +1,13 @@
 function Invoke-Sfdx {
     [CmdletBinding()]
-    Param([Parameter(Mandatory = $true)][string] $Command)        
+    Param([Parameter(Mandatory = $true)][string] $Command)
     Write-Verbose $Command
     return Invoke-Expression -Command $Command
 }
 
 function Show-SfdxResult {
     [CmdletBinding()]
-    Param([Parameter(Mandatory = $true)][psobject] $Result)           
+    Param([Parameter(Mandatory = $true)][psobject] $Result)
     $result = $Result | ConvertFrom-Json
     if ($result.status -ne 0) {
         Write-Debug $result
@@ -18,7 +18,7 @@ function Show-SfdxResult {
 
 function Retrieve-SalesforceComponent {
     [CmdletBinding()]
-    Param(        
+    Param(
         [Parameter(Mandatory = $false)][string][ValidateSet(
             'All',
             'ActionLinkGroupTemplate',
@@ -153,16 +153,16 @@ function Retrieve-SalesforceComponent {
         )] $Type,
         [Parameter(Mandatory = $false)][string] $Name,
         [Parameter(Mandatory = $true)][string] $Username
-    )  
+    )
 
     # Retrieve all Meta Types
     if ($Type -eq 'All') {
-        $metaTypes = Get-SalesforceMetaTypes -Username $Username    
+        $metaTypes = Get-SalesforceMetaTypes -Username $Username
         $count = 0
         foreach ($metaType in $metaTypes) {
-            Invoke-Sfdx -Command "sfdx force:source:retrieve --metadata $metaType --targetusername $Username"        
-            $count = $count + 1   
-            Write-Progress -Activity 'Getting Salesforce MetaData' -Status $metaType -PercentComplete (($count / $metaTypes.count) * 100) 
+            Invoke-Sfdx -Command "sfdx force:source:retrieve --metadata $metaType --targetusername $Username"
+            $count = $count + 1
+            Write-Progress -Activity 'Getting Salesforce MetaData' -Status $metaType -PercentComplete (($count / $metaTypes.count) * 100)
         }
         return
     }
@@ -178,9 +178,9 @@ function Retrieve-SalesforceComponent {
 function Retrieve-SalesforceField {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)][string] $ObjectName, 
-        [Parameter(Mandatory = $true)][string] $FieldName, 
-        [Parameter(Mandatory = $true)][string] $Username)    
+        [Parameter(Mandatory = $true)][string] $ObjectName,
+        [Parameter(Mandatory = $true)][string] $FieldName,
+        [Parameter(Mandatory = $true)][string] $Username)
     $command = "sfdx force:source:retrieve --metadata CustomField:$ObjectName.$FieldName"
     $command += " --targetusername $Username"
     Invoke-Sfdx -Command $command
@@ -188,7 +188,7 @@ function Retrieve-SalesforceField {
 
 function Deploy-SalesforceComponent {
     [CmdletBinding()]
-    Param(        
+    Param(
         [Parameter(Mandatory = $false)][string][ValidateSet(
             'ActionLinkGroupTemplate',
             'AnalyticSnapshot',
@@ -319,19 +319,19 @@ function Deploy-SalesforceComponent {
             'TransactionSecurityPolicy',
             'UserProvisioningConfig',
             'Workflow'
-        )] $Type = 'ApexClass',       
-        [Parameter(Mandatory = $false)][string] $Name,       
+        )] $Type = 'ApexClass',
+        [Parameter(Mandatory = $false)][string] $Name,
         [Parameter(Mandatory = $true)][string] $Username
-    )    
+    )
     $command = "sfdx force:source:deploy --metadata $Type"
-    if ($Name) { 
-        $command += ":$Name" 
+    if ($Name) {
+        $command += ":$Name"
     }
     $command += " --targetusername $Username"
     $command += " --json"
-    
+
     $result = Invoke-Sfdx -Command $command
-    return Show-SfdxResult -Result $result    
+    return Show-SfdxResult -Result $result
 }
 
 function Describe-SalesforceObjects {
@@ -339,27 +339,27 @@ function Describe-SalesforceObjects {
     Param(
         [Parameter(Mandatory = $true)][string] $Username,
         [Parameter(Mandatory = $false)][string][ValidateSet('all', 'custom', 'standard')] $ObjectTypeCategory = 'all'
-    ) 
+    )
     $command = "sfdx force:schema:sobject:list"
     $command += " --sobjecttypecategory all"
     $command += " --targetusername $Username"
     $command += " --json"
     $result = Invoke-Sfdx -Command $command
-    return Show-SfdxResult -Result $result    
+    return Show-SfdxResult -Result $result
 }
 
 function Describe-SalesforceObject {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)][string] $Name,    
+        [Parameter(Mandatory = $true)][string] $Name,
         [Parameter(Mandatory = $true)][string] $Username,
         [Parameter(Mandatory = $false)][switch] $UseToolingApi
-    ) 
+    )
     $command = "sfdx force:schema:sobject:describe"
     $command += " --sobjecttype $Name"
     if ($UseToolingApi) {
         $command += " --usetoolingapi"
-    }    
+    }
     $command += " --targetusername $Username"
     $command += " --json"
     $result = Invoke-Sfdx -Command $command
@@ -369,11 +369,11 @@ function Describe-SalesforceObject {
 function Describe-SalesforceFields {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)][string] $ObjectName,    
+        [Parameter(Mandatory = $true)][string] $ObjectName,
         [Parameter(Mandatory = $true)][string] $Username,
-        [Parameter(Mandatory = $false)][switch] $UseToolingApi        
-    )         
-    $result = Describe-SalesforceObject -Name $ObjectName -Username $Username -UseToolingApi:$UseToolingApi 
+        [Parameter(Mandatory = $false)][switch] $UseToolingApi
+    )
+    $result = Describe-SalesforceObject -Name $ObjectName -Username $Username -UseToolingApi:$UseToolingApi
     $result = $result.fields
     $result = $result | Select-Object name, label, type, byteLength
     return $result
@@ -381,12 +381,12 @@ function Describe-SalesforceFields {
 
 function Describe-SalesforceCodeTypes {
     [CmdletBinding()]
-    Param([Parameter(Mandatory = $true)][string] $Username)  
+    Param([Parameter(Mandatory = $true)][string] $Username)
     $command = "sfdx force:mdapi:describemetadata"
     $command += " --targetusername $Username"
     $command += " --json"
 
-    $result = Invoke-Sfdx -Command $command           
+    $result = Invoke-Sfdx -Command $command
     $result = $result | ConvertFrom-Json
     $result = $result.result.metadataObjects
     $result = $result | Select-Object xmlName
@@ -395,10 +395,10 @@ function Describe-SalesforceCodeTypes {
 
 function Get-SalesforceMetaTypes {
     [CmdletBinding()]
-    Param([Parameter(Mandatory = $true)][string] $Username)     
+    Param([Parameter(Mandatory = $true)][string] $Username)
     $result = Invoke-Sfdx -Command "sfdx force:mdapi:describemetadata --targetusername $username --json"
     $result = $result | ConvertFrom-Json
-    $result = $result.result.metadataObjects    
+    $result = $result.result.metadataObjects
     $result = $result.xmlName | Sort-Object
     return $result
 }
@@ -408,7 +408,7 @@ function Get-SalesforceApexClass {
     Param(
         [Parameter(Mandatory = $true)][string] $Name,
         [Parameter(Mandatory = $true)][string] $Username
-    )   
+    )
     $query = "SELECT Id, Name "
     $query += "FROM ApexClass "
     $query += "WHERE Name = '$Name'"
@@ -420,22 +420,22 @@ function Get-SalesforceApexClass {
 function Build-SalesforceQuery {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)][string] $ObjectName,    
+        [Parameter(Mandatory = $true)][string] $ObjectName,
         [Parameter(Mandatory = $true)][string] $Username,
         [Parameter(Mandatory = $false)][switch] $UseToolingApi
-    ) 
+    )
     $fields = Describe-SalesforceFields -ObjectName $ObjectName -Username $Username -UseToolingApi:$UseToolingApi
     if ($null -eq $fields) {
         return ""
     }
 
     $fieldNames = @()
-    foreach ($field in $fields) { 
-        $fieldNames += $field.name 
+    foreach ($field in $fields) {
+        $fieldNames += $field.name
     }
     $value = "SELECT "
-    foreach ($fieldName in $fieldNames) { 
-        $value += $fieldName + "," 
+    foreach ($fieldName in $fieldNames) {
+        $value += $fieldName + ","
     }
     $value = $value.TrimEnd(",")
     $value += " FROM $ObjectName"
