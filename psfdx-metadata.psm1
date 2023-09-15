@@ -160,18 +160,16 @@ function Retrieve-SalesforceComponent {
         $metaTypes = Get-SalesforceMetaTypes -Username $Username
         $count = 0
         foreach ($metaType in $metaTypes) {
-            Invoke-Sfdx -Command "sfdx force:source:retrieve --metadata $metaType --targetusername $Username"
+            Invoke-Sfdx -Command "sf project retrieve start --metadata $metaType --target-org $Username"
             $count = $count + 1
             Write-Progress -Activity 'Getting Salesforce MetaData' -Status $metaType -PercentComplete (($count / $metaTypes.count) * 100)
         }
         return
     }
 
-    $command = "sfdx force:source:retrieve --metadata $Type"
-    if ($Name) {
-        $command += ":$Name"
-    }
-    $command += " --targetusername $Username"
+    $command = "sf project retrieve start --metadata $Type"
+    if ($Name) { $command += ":$Name" }
+    $command += " --target-org $Username"
     Invoke-Sfdx -Command $command
 }
 
@@ -180,9 +178,9 @@ function Retrieve-SalesforceField {
     Param(
         [Parameter(Mandatory = $true)][string] $ObjectName,
         [Parameter(Mandatory = $true)][string] $FieldName,
-        [Parameter(Mandatory = $true)][string] $Username)
-    $command = "sfdx force:source:retrieve --metadata CustomField:$ObjectName.$FieldName"
-    $command += " --targetusername $Username"
+        [Parameter(Mandatory = $false)][string] $Username)
+    $command = "sf project retrieve start --metadata CustomField:$ObjectName.$FieldName"
+    if ($Username) { $command += " --target-org $Username" }
     Invoke-Sfdx -Command $command
 }
 
