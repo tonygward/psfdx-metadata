@@ -16,12 +16,32 @@ function Show-SfdxResult {
     return $result.result
 }
 
+function Retrieve-SalesforceOrg {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $false)][string] $Username,
+        [Parameter(Mandatory = $false)][switch] $IncludePackages
+    )
+
+    $command = "sf force source manifest create --from-org $Username"
+    $command += " --name=allMetadata"
+    $command += " --output-dir ."
+    if ($IncludePackages) { $command += " --include-packages=unlocked"}
+    Invoke-Expression -Command $command
+
+    $command = "sf project retrieve start --target-org $Username"
+    $command += " --manifest allMetadata.xml"
+    Invoke-Expression -Command $command
+}
+
 function Retrieve-SalesforceComponent {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $false)][string][ValidateSet(
-            'All',
+            'ActionLauncherItemDef',
             'ActionLinkGroupTemplate',
+            'AIApplication',
+            'AIApplicationConfig',
             'AnalyticSnapshot',
             'AnimationRule',
             'ApexClass',
@@ -31,6 +51,7 @@ function Retrieve-SalesforceComponent {
             'ApexTestSuite',
             'ApexTrigger',
             'AppMenu',
+            'AppointmentAssignmentPolicy',
             'AppointmentSchedulingPolicy',
             'ApprovalProcess',
             'AssignmentRules',
@@ -39,6 +60,7 @@ function Retrieve-SalesforceComponent {
             'AutoResponseRules',
             'BlacklistedConsumer',
             'BrandingSet',
+            'BriefcaseDefinition',
             'CallCenter',
             'CallCoachingMediaProvider',
             'CanvasMetadata',
@@ -49,6 +71,7 @@ function Retrieve-SalesforceComponent {
             'Community',
             'ConnectedApp',
             'ContentAsset',
+            'ConversationMessageDefinition',
             'CorsWhitelistOrigin',
             'CspTrustedSite',
             'CustomApplication',
@@ -67,7 +90,9 @@ function Retrieve-SalesforceComponent {
             'CustomTab',
             'Dashboard',
             'DataCategoryGroup',
+            'DataWeaveResource',
             'DelegateGroup',
+            'DigitalExperienceBundle',
             'Document',
             'DuplicateRule',
             'EclairGeoData',
@@ -79,12 +104,18 @@ function Retrieve-SalesforceComponent {
             'EmbeddedServiceMenuSettings',
             'EntityImplements',
             'EscalationRules',
+            'EventRelayConfig',
+            'ExperienceContainer',
+            'ExperiencePropertyTypeBundle',
+            'ExternalCredential',
             'ExternalDataSource',
             'ExternalServiceRegistration',
+            'FieldRestrictionRule',
             'FlexiPage',
             'Flow',
             'FlowCategory',
             'FlowDefinition',
+            'FlowTest',
             'GatewayProviderPaymentMethodType',
             'GlobalValueSet',
             'GlobalValueSetTranslation',
@@ -94,6 +125,7 @@ function Retrieve-SalesforceComponent {
             'IframeWhiteListUrlSettings',
             'InboundNetworkConnection',
             'InstalledPackage',
+            'IPAddressRange',
             'Layout',
             'LeadConvertSettings',
             'Letterhead',
@@ -105,6 +137,10 @@ function Retrieve-SalesforceComponent {
             'LiveChatSensitiveDataRule',
             'ManagedContentType',
             'MatchingRules',
+            'MessagingChannel',
+            'MLDataDefinition',
+            'MLPredictionDefinition',
+            'MLRecommendationDefinition',
             'MobileApplicationDetail',
             'MutingPermissionSet',
             'MyDomainDiscoverableLogin',
@@ -122,6 +158,8 @@ function Retrieve-SalesforceComponent {
             'PlatformEventChannelMember',
             'PlatformEventSubscriberConfig',
             'PostTemplate',
+            'ProcessFlowMigration',
+            'ProductAttributeSet',
             'Profile',
             'ProfilePasswordPolicy',
             'ProfileSessionSetting',
@@ -134,38 +172,30 @@ function Retrieve-SalesforceComponent {
             'RemoteSiteSetting',
             'Report',
             'ReportType',
+            'RestrictionRule',
             'Role',
             'SamlSsoConfig',
             'Scontrol',
+            'SearchCustomization',
             'Settings',
             'SharingRules',
             'SharingSet',
             'SiteDotCom',
             'Skill',
+            'SkillType',
             'StandardValueSet',
             'StandardValueSetTranslation',
             'StaticResource',
             'SynonymDictionary',
             'TopicsForObjects',
             'TransactionSecurityPolicy',
+            'UserProfileSearchScope',
             'UserProvisioningConfig',
             'Workflow'
         )] $Type,
         [Parameter(Mandatory = $false)][string] $Name,
         [Parameter(Mandatory = $true)][string] $Username
     )
-
-    # Retrieve all Meta Types
-    if ($Type -eq 'All') {
-        $metaTypes = Get-SalesforceMetaTypes -Username $Username
-        $count = 0
-        foreach ($metaType in $metaTypes) {
-            Invoke-Sfdx -Command "sf project retrieve start --metadata $metaType --target-org $Username"
-            $count = $count + 1
-            Write-Progress -Activity 'Getting Salesforce MetaData' -Status $metaType -PercentComplete (($count / $metaTypes.count) * 100)
-        }
-        return
-    }
 
     $command = "sf project retrieve start --metadata $Type"
     if ($Name) { $command += ":$Name" }
@@ -441,6 +471,7 @@ function Build-SalesforceQuery {
 }
 
 
+Export-ModuleMember Retrieve-SalesforceOrg
 Export-ModuleMember Retrieve-SalesforceComponent
 Export-ModuleMember Retrieve-SalesforceField
 Export-ModuleMember Deploy-SalesforceComponent
