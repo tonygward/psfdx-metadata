@@ -380,15 +380,15 @@ function Describe-SalesforceObject {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true)][string] $Name,
-        [Parameter(Mandatory = $true)][string] $Username,
+        [Parameter(Mandatory = $false)][string] $Username,
         [Parameter(Mandatory = $false)][switch] $UseToolingApi
     )
-    $command = "sfdx force:schema:sobject:describe"
-    $command += " --sobjecttype $Name"
+    $command = "sf sobject describe"
+    $command += " --sobject $Name"
     if ($UseToolingApi) {
-        $command += " --usetoolingapi"
+        $command += " --use-tooling-api"
     }
-    $command += " --targetusername $Username"
+    $command += " --target-org $Username"
     $command += " --json"
     $result = Invoke-Sfdx -Command $command
     return Show-SfdxResult -Result $result
@@ -398,7 +398,7 @@ function Describe-SalesforceFields {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true)][string] $ObjectName,
-        [Parameter(Mandatory = $true)][string] $Username,
+        [Parameter(Mandatory = $false)][string] $Username,
         [Parameter(Mandatory = $false)][switch] $UseToolingApi
     )
     $result = Describe-SalesforceObject -Name $ObjectName -Username $Username -UseToolingApi:$UseToolingApi
