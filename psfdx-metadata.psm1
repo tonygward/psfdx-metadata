@@ -368,9 +368,9 @@ function Describe-SalesforceObjects {
         [Parameter(Mandatory = $true)][string] $Username,
         [Parameter(Mandatory = $false)][string][ValidateSet('all', 'custom', 'standard')] $ObjectTypeCategory = 'all'
     )
-    $command = "sfdx force:schema:sobject:list"
-    $command += " --sobjecttypecategory all"
-    $command += " --targetusername $Username"
+    $command = "sf sobject list"
+    $command += " --sobject all"
+    $command += " --target-org $Username"
     $command += " --json"
     $result = Invoke-Sfdx -Command $command
     return Show-SfdxResult -Result $result
