@@ -1,11 +1,11 @@
-function Invoke-Sfdx {
+function Invoke-Sf {
     [CmdletBinding()]
     Param([Parameter(Mandatory = $true)][string] $Command)
     Write-Verbose $Command
     return Invoke-Expression -Command $Command
 }
 
-function Show-SfdxResult {
+function Show-SfResult {
     [CmdletBinding()]
     Param([Parameter(Mandatory = $true)][psobject] $Result)
     $result = $Result | ConvertFrom-Json
@@ -200,7 +200,7 @@ function Retrieve-SalesforceComponent {
     $command = "sf project retrieve start --metadata $Type"
     if ($Name) { $command += ":$Name" }
     if ($Username) { $command += " --target-org $Username" }
-    Invoke-Sfdx -Command $command
+    Invoke-Sf -Command $command
 }
 
 function Retrieve-SalesforceField {
@@ -211,7 +211,7 @@ function Retrieve-SalesforceField {
         [Parameter(Mandatory = $false)][string] $Username)
     $command = "sf project retrieve start --metadata CustomField:$ObjectName.$FieldName"
     if ($Username) { $command += " --target-org $Username" }
-    Invoke-Sfdx -Command $command
+    Invoke-Sf -Command $command
 }
 
 function Deploy-SalesforceComponent {
@@ -351,15 +351,16 @@ function Deploy-SalesforceComponent {
         [Parameter(Mandatory = $false)][string] $Name,
         [Parameter(Mandatory = $true)][string] $Username
     )
-    $command = "sfdx force:source:deploy --metadata $Type"
+    $command = "project deploy start"
+    $command += "--metadata $Type"
     if ($Name) {
         $command += ":$Name"
     }
-    $command += " --targetusername $Username"
+    $command += " --target-org $Username"
     $command += " --json"
 
-    $result = Invoke-Sfdx -Command $command
-    return Show-SfdxResult -Result $result
+    $result = Invoke-Sf -Command $command
+    return Show-SfResult -Result $result
 }
 
 function Describe-SalesforceObjects {
@@ -372,8 +373,8 @@ function Describe-SalesforceObjects {
     $command += " --sobject all"
     $command += " --target-org $Username"
     $command += " --json"
-    $result = Invoke-Sfdx -Command $command
-    return Show-SfdxResult -Result $result
+    $result = Invoke-Sf -Command $command
+    return Show-SfResult -Result $result
 }
 
 function Describe-SalesforceObject {
@@ -390,8 +391,8 @@ function Describe-SalesforceObject {
     }
     $command += " --target-org $Username"
     $command += " --json"
-    $result = Invoke-Sfdx -Command $command
-    return Show-SfdxResult -Result $result
+    $result = Invoke-Sf -Command $command
+    return Show-SfResult -Result $result
 }
 
 function Describe-SalesforceFields {
@@ -407,27 +408,17 @@ function Describe-SalesforceFields {
     return $result
 }
 
-function Describe-SalesforceCodeTypes {
-    [CmdletBinding()]
-    Param([Parameter(Mandatory = $true)][string] $Username)
-    $command = "sfdx force:mdapi:describemetadata"
-    $command += " --targetusername $Username"
-    $command += " --json"
-
-    $result = Invoke-Sfdx -Command $command
-    $result = $result | ConvertFrom-Json
-    $result = $result.result.metadataObjects
-    $result = $result | Select-Object xmlName
-    return $result
-}
-
 function Get-SalesforceMetaTypes {
     [CmdletBinding()]
     Param([Parameter(Mandatory = $true)][string] $Username)
-    $result = Invoke-Sfdx -Command "sfdx force:mdapi:describemetadata --targetusername $username --json"
+    $command = "sf org list metadata-types"
+    $command += " --target-org $Username"
+    $command += " --json"
+
+    $result = Invoke-Sf -Command $command
     $result = $result | ConvertFrom-Json
     $result = $result.result.metadataObjects
-    $result = $result.xmlName | Sort-Object
+    $result = $result | Select-Object xmlName
     return $result
 }
 
@@ -470,7 +461,6 @@ function Build-SalesforceQuery {
     return $value
 }
 
-
 Export-ModuleMember Retrieve-SalesforceOrg
 Export-ModuleMember Retrieve-SalesforceComponent
 Export-ModuleMember Retrieve-SalesforceField
@@ -479,7 +469,6 @@ Export-ModuleMember Deploy-SalesforceComponent
 Export-ModuleMember Describe-SalesforceObjects
 Export-ModuleMember Describe-SalesforceObject
 Export-ModuleMember Describe-SalesforceFields
-Export-ModuleMember Describe-SalesforceCodeTypes
 Export-ModuleMember Get-SalesforceMetaTypes
 
 Export-ModuleMember Get-SalesforceApexClass
