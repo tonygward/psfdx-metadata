@@ -194,12 +194,12 @@ function Retrieve-SalesforceComponent {
             'Workflow'
         )] $Type,
         [Parameter(Mandatory = $false)][string] $Name,
-        [Parameter(Mandatory = $true)][string] $Username
+        [Parameter(Mandatory = $false)][string] $Username
     )
 
     $command = "sf project retrieve start --metadata $Type"
     if ($Name) { $command += ":$Name" }
-    $command += " --target-org $Username"
+    if ($Username) { $command += " --target-org $Username" }
     Invoke-Sfdx -Command $command
 }
 
