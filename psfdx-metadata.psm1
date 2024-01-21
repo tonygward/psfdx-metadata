@@ -385,11 +385,13 @@ function Describe-SalesforceObject {
         [Parameter(Mandatory = $false)][switch] $UseToolingApi
     )
     $command = "sf sobject describe"
+    if ($Username) {
+        $command += " --target-org $Username"
+    }
     $command += " --sobject $Name"
     if ($UseToolingApi) {
         $command += " --use-tooling-api"
     }
-    $command += " --target-org $Username"
     $command += " --json"
     $result = Invoke-Sf -Command $command
     return Show-SfResult -Result $result
