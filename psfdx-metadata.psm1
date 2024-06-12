@@ -214,6 +214,17 @@ function Retrieve-SalesforceField {
     Invoke-Sf -Command $command
 }
 
+function Retrieve-SalesforceValidationRule {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)][string] $ObjectName,
+        [Parameter(Mandatory = $true)][string] $RuleName,
+        [Parameter(Mandatory = $false)][string] $Username)
+    $command = "sf project retrieve start --metadata ValidationRule:$ObjectName.$RuleName"
+    if ($Username) { $command += " --target-org $Username" }
+    Invoke-Sf -Command $command
+}
+
 function Deploy-SalesforceComponent {
     [CmdletBinding()]
     Param(
@@ -466,6 +477,7 @@ function Build-SalesforceQuery {
 Export-ModuleMember Retrieve-SalesforceOrg
 Export-ModuleMember Retrieve-SalesforceComponent
 Export-ModuleMember Retrieve-SalesforceField
+Export-ModuleMember Retrieve-SalesforceValidationRule
 Export-ModuleMember Deploy-SalesforceComponent
 
 Export-ModuleMember Describe-SalesforceObjects
